@@ -1,0 +1,11 @@
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/RideEatsApplication.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/config/CorsConfig.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/controller/AssignmentController.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/controller/BikerController.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/controller/OrderController.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/model/Assignment.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/model/Biker.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/model/Order.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/service/AssignmentService.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/service/BikerService.java
+/home/ghost/Desktop/Personal/Vue/bp-test/backend/src/main/java/com/ghost_riders/RideEats/service/OrderService.java
