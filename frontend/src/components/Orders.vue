@@ -108,6 +108,10 @@
             <HomeIcon class="h-4 w-4 mr-2 text-green-400" />
             <span class="text-sm truncate">{{ order.deliveryAddress }}</span>
           </div>
+          <div class="flex items-center text-gray-300">
+            <BikeIcon class="h-4 w-4 mr-2 text-green-400" />
+            <span class="text-sm truncate">{{ order.assignedBiker }}</span>
+          </div>
         </div>
         <div class="flex space-x-2">
           <button
@@ -338,6 +342,7 @@ import {
   PlusIcon,
 } from "lucide-vue-next";
 import { ordersApi, bikersApi } from "../services/api.js";
+import { BikeIcon } from "lucide-vue-next";
 
 const showError = inject("showError");
 const showSuccess = inject("showSuccess");

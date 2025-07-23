@@ -5,18 +5,14 @@ public class Biker {
     private String name;
     private String phone;
     private String email;
-    private double rating;
-    private int totalDeliveries;
 
     public Biker() {}
 
-    public Biker(String id, String name, String phone, String email, double rating, int totalDeliveries) {
+    public Biker(String id, String name, String phone, String email) {
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.email = email;
-        this.rating = rating;
-        this.totalDeliveries = totalDeliveries;
     }
 
     // Getters and setters for all fields
@@ -28,8 +24,4 @@ public class Biker {
     public void setPhone(String phone) { this.phone = phone; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public double getRating() { return rating; }
-    public void setRating(double rating) { this.rating = rating; }
-    public int getTotalDeliveries() { return totalDeliveries; }
-    public void setTotalDeliveries(int totalDeliveries) { this.totalDeliveries = totalDeliveries; }
 }

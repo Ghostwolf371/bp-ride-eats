@@ -9,7 +9,7 @@ public class Order {
     private int preparationTime;
     private double total;
     private String deliveryAddress;
-    private String status; // AVAILABLE, COMPLETED
+    private String status;
     private String assignedBiker;
     private LocalDateTime createdAt;
 
