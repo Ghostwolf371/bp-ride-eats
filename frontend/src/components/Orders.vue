@@ -108,7 +108,10 @@
             <HomeIcon class="h-4 w-4 mr-2 text-green-400" />
             <span class="text-sm truncate">{{ order.deliveryAddress }}</span>
           </div>
-          <div class="flex items-center text-gray-300">
+          <div
+            v-if="order.status === 'COMPLETED'"
+            class="flex items-center text-gray-300"
+          >
             <BikeIcon class="h-4 w-4 mr-2 text-green-400" />
             <span class="text-sm truncate">{{ order.assignedBiker }}</span>
           </div>
