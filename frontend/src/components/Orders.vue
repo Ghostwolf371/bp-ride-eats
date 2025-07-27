@@ -45,7 +45,7 @@
 
     <!-- Countdown Loading Spinner -->
     <div
-      v-else-if="!isCountdownsReady && filteredOrders.length > 0"
+      v-else-if="!isCountdownsReady && orders.length > 0"
       class="flex justify-center py-12"
     >
       <div
@@ -55,11 +55,11 @@
 
     <!-- Orders Grid -->
     <div
-      v-else-if="filteredOrders.length > 0"
+      v-else-if="orders.length > 0"
       class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
       <div
-        v-for="order in filteredOrders"
+        v-for="order in orders"
         :key="order.id"
         class="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-green-500 transition-colors duration-200"
       >
@@ -331,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject, watch } from "vue";
+import { ref, onMounted, inject, watch } from "vue";
 import {
   SearchIcon,
   UserIcon,
@@ -352,7 +352,6 @@ const showSuccess = inject("showSuccess");
 
 const orders = ref([]);
 const searchQuery = ref("");
-const statusFilter = ref("");
 const isLoading = ref(false);
 const isAssigning = ref(null);
 const isUpdating = ref(null);
@@ -426,24 +425,6 @@ const refreshOrders = async () => {
   await fetchOrders();
   showSuccess("Orders refreshed successfully");
 };
-
-const filteredOrders = computed(() => {
-  let filtered = orders.value;
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(
-      (order) =>
-        order.id?.toLowerCase().includes(query) ||
-        order.customerName?.toLowerCase().includes(query) ||
-        order.restaurant?.toLowerCase().includes(query) ||
-        order.deliveryAddress?.toLowerCase().includes(query)
-    );
-  }
-  if (statusFilter.value) {
-    filtered = filtered.filter((order) => order.status === statusFilter.value);
-  }
-  return filtered;
-});
 
 const getStatusColor = (status) => {
   switch (status) {

@@ -45,11 +45,11 @@
 
     <!-- Bikers Grid -->
     <div
-      v-else-if="filteredBikers.length > 0"
+      v-else-if="bikers.length > 0"
       class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
       <div
-        v-for="biker in filteredBikers"
+        v-for="biker in bikers"
         :key="biker.id"
         class="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-green-500 transition-colors duration-200"
       >
@@ -195,13 +195,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from "vue";
+import { ref, onMounted, inject } from "vue";
 import {
   SearchIcon,
   PlusIcon,
   PhoneIcon,
   MailIcon,
-  StarIcon,
   EditIcon,
   TrashIcon,
   BikeIcon,
@@ -226,19 +225,6 @@ const bikerForm = ref({
   name: "",
   phone: "",
   email: "",
-});
-
-// Computed properties
-const filteredBikers = computed(() => {
-  if (!searchQuery.value) return bikers.value;
-
-  const query = searchQuery.value.toLowerCase();
-  return bikers.value.filter(
-    (biker) =>
-      biker.name?.toLowerCase().includes(query) ||
-      biker.phone?.includes(query) ||
-      biker.email?.toLowerCase().includes(query)
-  );
 });
 
 // Methods
