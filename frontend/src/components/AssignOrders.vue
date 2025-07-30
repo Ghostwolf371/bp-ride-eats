@@ -337,6 +337,10 @@ const selectedOrder = ref(null);
 const selectedBiker = ref(null);
 const isLoading = ref(false);
 const isAssigning = ref(false);
+const isSearching = ref(false);
+const orderBinarySearchResult = ref(null);
+const isSearchingBiker = ref(false);
+const bikerBinarySearchResult = ref(null);
 
 const countdowns = ref({});
 const isCountdownsReady = ref(false);
@@ -369,27 +373,83 @@ const formatSecondsToHMS = (seconds) => {
   return [h, m, s].map((v) => v.toString().padStart(2, "0")).join(":");
 };
 
+// Binary search function for assignable orders
+const performAssignableOrderBinarySearch = async (orderId) => {
+  isSearching.value = true;
+  try {
+    const { data, error } = await ordersApi.searchAssignableOrderByIdBinary(orderId);
+    if (error) {
+      console.log("Failed to search order: " + error);
+      orderBinarySearchResult.value = null;
+    }
+    orderBinarySearchResult.value = data;
+
+    if (data) {
+      showSuccess(`Order #${orderId} found using binary search!`);
+    } else {
+      showError(`Order #${orderId} not found`);
+    }
+  } catch (err) {
+    showError("Failed to search order");
+    orderBinarySearchResult.value = null;
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+// Binary search function for available bikers
+const performBikerBinarySearch = async (bikerId) => {
+  isSearchingBiker.value = true;
+  try {
+    const { data, error } = await bikersApi.searchBikerByIdBinary(bikerId);
+    if (error) {
+      console.log("Failed to search biker: " + error);
+      bikerBinarySearchResult.value = null;
+    }
+    bikerBinarySearchResult.value = data;
+
+    if (data) {
+      showSuccess(`Biker #${bikerId} found using binary search!`);
+    } else {
+      showError(`Biker #${bikerId} not found`);
+    }
+  } catch (err) {
+    showError("Failed to search biker");
+    bikerBinarySearchResult.value = null;
+  } finally {
+    isSearchingBiker.value = false;
+  }
+};
+
 // Computed properties
 const filteredOrders = computed(() => {
-  if (!orderSearchQuery.value) return assignableOrders.value;
+  // If we have a binary search result, return it
+  if (orderBinarySearchResult.value !== null) {
+    return [orderBinarySearchResult.value];
+  }
 
-  const query = orderSearchQuery.value.toLowerCase();
-  return assignableOrders.value.filter(
-    (order) =>
-      order.id?.toLowerCase().includes(query) ||
-      order.customerName?.toLowerCase().includes(query) ||
-      order.restaurant?.toLowerCase().includes(query)
-  );
+  // If searching by numeric ID but no result yet, return empty
+  if (orderSearchQuery.value && /^\d+$/.test(orderSearchQuery.value.trim())) {
+    return [];
+  }
+
+  // For non-ID searches, return all bikers (no client-side filtering)
+  return assignableOrders.value;
 });
 
 const filteredBikers = computed(() => {
-  if (!bikerSearchQuery.value) return availableBikers.value;
+  // If we have a binary search result, return it
+  if (bikerBinarySearchResult.value !== null) {
+    return [bikerBinarySearchResult.value];
+  }
 
-  const query = bikerSearchQuery.value.toLowerCase();
-  return availableBikers.value.filter(
-    (biker) =>
-      biker.name?.toLowerCase().includes(query) || biker.phone?.includes(query)
-  );
+  // If searching by numeric ID but no result yet, return empty
+  if (bikerSearchQuery.value && /^\d+$/.test(bikerSearchQuery.value.trim())) {
+    return [];
+  }
+
+  // For non-ID searches, return all bikers (no client-side filtering)
+  return availableBikers.value;
 });
 
 // Methods
@@ -509,6 +569,46 @@ const formatMinutesToHMS = (minutes) => {
 onMounted(() => {
   refreshData();
   startCountdowns();
+});
+
+// Watch for order search query changes to trigger binary search
+watch(orderSearchQuery, (newQuery) => {
+  const trimmedQuery = newQuery.trim();
+
+  // Clear binary search result if search is empty
+  if (!trimmedQuery) {
+    binarySearchResult.value = null;
+    return;
+  }
+
+  // Only perform binary search for exact numeric IDs (no partial matches)
+  if (/^\d+$/.test(trimmedQuery)) {
+    // Only search if it's a complete ID (not partial)
+    performAssignableOrderBinarySearch(trimmedQuery);
+  } else {
+    // For non-numeric searches, clear binary search result
+    binarySearchResult.value = null;
+  }
+});
+
+// Watch for biker search query changes to trigger binary search
+watch(bikerSearchQuery, (newQuery) => {
+  const trimmedQuery = newQuery.trim();
+
+  // Clear binary search result if search is empty
+  if (!trimmedQuery) {
+    bikerBinarySearchResult.value = null;
+    return;
+  }
+
+  // Only perform binary search for exact numeric IDs (no partial matches)
+  if (/^\d+$/.test(trimmedQuery)) {
+    // Only search if it's a complete ID (not partial)
+    performBikerBinarySearch(trimmedQuery);
+  } else {
+    // For non-numeric searches, clear binary search result
+    bikerBinarySearchResult.value = null;
+  }
 });
 
 watch(assignableOrders, () => {

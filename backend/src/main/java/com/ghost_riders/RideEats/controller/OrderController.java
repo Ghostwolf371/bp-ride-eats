@@ -52,6 +52,11 @@ public class OrderController {
     public Order getOrderByIdBinary(@PathVariable String id) {
         return orderService.binarySearchOrderById(id);
     }
+    
+    @GetMapping("/assignable/binary/{id}")
+    public Order getAssignableOrderByIdBinary(@PathVariable String id) {
+        return orderService.binarySearchAssignableOrderById(id);
+    }
 
     @PostMapping
     public Order createOrder(@RequestBody Order order) {

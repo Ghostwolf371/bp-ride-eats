@@ -352,7 +352,6 @@ const showSuccess = inject("showSuccess");
 
 const orders = ref([]);
 const searchQuery = ref("");
-const statusFilter = ref("");
 const isLoading = ref(false);
 const isAssigning = ref(null);
 const isUpdating = ref(null);
@@ -454,8 +453,8 @@ const refreshOrders = async () => {
 
 const filteredOrders = computed(() => {
   // If we have a binary search result, return it
-  if (binarySearchResult.value !== null) {
-    return [binarySearchResult.value];
+  if (searchQuery.value !== null) {
+    return [searchQuery.value];
   }
 
   // If searching by numeric ID but no result yet, return empty
@@ -463,14 +462,8 @@ const filteredOrders = computed(() => {
     return [];
   }
 
-  // For all other cases, show all orders (no client-side filtering)
-  let filtered = orders.value;
-
-  if (statusFilter.value) {
-    filtered = filtered.filter((order) => order.status === statusFilter.value);
-  }
-
-  return filtered;
+  // For non-ID searches, return all bikers (no client-side filtering)
+  return bikers.value;
 });
 
 const getStatusColor = (status) => {

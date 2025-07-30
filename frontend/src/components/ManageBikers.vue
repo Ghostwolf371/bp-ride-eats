@@ -13,7 +13,10 @@
             placeholder="Search bikers..."
             class="w-full sm:w-64 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
-          <SearchIcon class="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+          <div class="absolute right-3 top-2.5">
+            <RefreshCwIcon v-if="isSearching" class="h-5 w-5 text-green-400 animate-spin" />
+            <SearchIcon v-else class="h-5 w-5 text-gray-400" />
+          </div>
         </div>
         <button
           @click="openAddBikerModal"
@@ -45,11 +48,11 @@
 
     <!-- Bikers Grid -->
     <div
-      v-else-if="bikers.length > 0"
+      v-else-if="filteredBikers.length > 0"
       class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
       <div
-        v-for="biker in bikers"
+        v-for="biker in filteredBikers"
         :key="biker.id"
         class="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-green-500 transition-colors duration-200"
       >
@@ -106,8 +109,10 @@
       <p class="text-gray-400 text-lg font-medium">No bikers found</p>
       <p class="text-gray-500 mt-2">
         {{
-          searchQuery
-            ? "Try adjusting your search criteria"
+          searchQuery && /^\d+$/.test(searchQuery.trim())
+            ? `No biker found with ID ${searchQuery}`
+            : searchQuery
+            ? "No bikers match your search criteria"
             : "Add your first biker to get started"
         }}
       </p>
@@ -195,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from "vue";
+import { ref, onMounted, inject, watch, computed } from "vue";
 import {
   SearchIcon,
   PlusIcon,
@@ -220,6 +225,8 @@ const isLoading = ref(false);
 const isSaving = ref(false);
 const isUpdating = ref(null);
 const isDeleting = ref(null);
+const isSearching = ref(false);
+const binarySearchResult = ref(null);
 
 const bikerForm = ref({
   name: "",
@@ -227,7 +234,47 @@ const bikerForm = ref({
   email: "",
 });
 
+// Computed property for filtered bikers
+const filteredBikers = computed(() => {
+  // If we have a binary search result, return it
+  if (binarySearchResult.value !== null) {
+    return [binarySearchResult.value];
+  }
+
+  // If searching by numeric ID but no result yet, return empty
+  if (searchQuery.value && /^\d+$/.test(searchQuery.value.trim())) {
+    return [];
+  }
+
+  // For non-ID searches, return all bikers (no client-side filtering)
+  return bikers.value;
+});
+
 // Methods
+// Binary search function for bikers
+const performBikerBinarySearch = async (bikerId) => {
+  isSearching.value = true;
+  try {
+    const { data, error } = await bikersApi.searchBikerByIdBinary(bikerId);
+    if (error) {
+      console.log("Failed to search biker: " + error);
+      binarySearchResult.value = null;
+    }
+    binarySearchResult.value = data;
+
+    if (data) {
+      showSuccess(`Biker #${bikerId} found using binary search!`);
+    } else {
+      showError(`Biker #${bikerId} not found`);
+    }
+  } catch (err) {
+    showError("Failed to search biker");
+    binarySearchResult.value = null;
+  } finally {
+    isSearching.value = false;
+  }
+};
+
 const fetchBikers = async () => {
   isLoading.value = true;
   try {
@@ -345,6 +392,26 @@ const closeModal = () => {
     email: "",
   };
 };
+
+// Watch for search query changes to trigger binary search
+watch(searchQuery, (newQuery) => {
+  const trimmedQuery = newQuery.trim();
+
+  // Clear binary search result if search is empty
+  if (!trimmedQuery) {
+    binarySearchResult.value = null;
+    return;
+  }
+
+  // Only perform binary search for exact numeric IDs (no partial matches)
+  if (/^\d+$/.test(trimmedQuery)) {
+    // Only search if it's a complete ID (not partial)
+    performBikerBinarySearch(trimmedQuery);
+  } else {
+    // For non-numeric searches, clear binary search result
+    binarySearchResult.value = null;
+  }
+});
 
 // Lifecycle
 onMounted(() => {

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class BikerService {
@@ -20,7 +21,7 @@ public class BikerService {
 
     public Biker createBiker(Biker biker) {
         if (biker.getId() == null || biker.getId().isEmpty()) {
-            biker.setId(UUID.randomUUID().toString());
+            biker.setId(String.valueOf(bikers.size() + 1));
         }
         bikers.put(biker.getId(), biker);
         return biker;
@@ -41,5 +42,28 @@ public class BikerService {
     public List<Biker> getAvailableBikers() {
         // For demo, all bikers are available
         return new ArrayList<>(bikers.values());
+    }
+    
+    // Binary search algorithm to find a biker by ID
+    public Biker binarySearchBikerById(String id) {
+        List<Biker> bikerList = new ArrayList<>(bikers.values());
+        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+        bikerList.sort(Comparator.comparing(Biker::getId));
+        
+        int left = 0;
+        int right = bikerList.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            Biker midBiker = bikerList.get(mid);
+            int cmp = midBiker.getId().compareTo(id);
+            if (cmp == 0) {
+                return midBiker;
+            } else if (cmp < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return null;
     }
 }

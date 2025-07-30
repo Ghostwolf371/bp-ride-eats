@@ -28,6 +28,11 @@ public class BikerController {
     public Biker getBikerById(@PathVariable String id) {
         return bikerService.getBikerById(id);
     }
+    
+    @GetMapping("/binary/{id}")
+    public Biker getBikerByIdBinary(@PathVariable String id) {
+        return bikerService.binarySearchBikerById(id);
+    }
 
     @PostMapping
     public Biker createBiker(@RequestBody Biker biker) {

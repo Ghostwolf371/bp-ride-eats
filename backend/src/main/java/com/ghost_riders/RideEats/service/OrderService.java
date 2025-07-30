@@ -134,4 +134,31 @@ public class OrderService {
         }
         return null;
     }
+    
+    // Binary search algorithm to find an assignable order by ID
+    public Order binarySearchAssignableOrderById(String id) {
+        // Get only assignable orders (AVAILABLE or PREPARING)
+        List<Order> assignableOrderList = orders.values().stream()
+            .filter(order -> "AVAILABLE".equals(order.getStatus()) || "PREPARING".equals(order.getStatus()))
+            .collect(Collectors.toList());
+        
+        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+        assignableOrderList.sort(Comparator.comparing(Order::getId));
+        
+        int left = 0;
+        int right = assignableOrderList.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            Order midOrder = assignableOrderList.get(mid);
+            int cmp = midOrder.getId().compareTo(id);
+            if (cmp == 0) {
+                return midOrder;
+            } else if (cmp < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return null;
+    }
 }
