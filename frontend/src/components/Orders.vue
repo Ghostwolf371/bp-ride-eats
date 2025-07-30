@@ -45,7 +45,7 @@
 
     <!-- Countdown Loading Spinner -->
     <div
-      v-else-if="!isCountdownsReady && orders.length > 0"
+      v-else-if="!isCountdownsReady && filteredOrders.length > 0"
       class="flex justify-center py-12"
     >
       <div
@@ -55,11 +55,11 @@
 
     <!-- Orders Grid -->
     <div
-      v-else-if="orders.length > 0"
+      v-else-if="filteredOrders.length > 0"
       class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
       <div
-        v-for="order in orders"
+        v-for="order in filteredOrders"
         :key="order.id"
         class="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-green-500 transition-colors duration-200"
       >
@@ -331,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, watch } from "vue";
+import { ref, computed, onMounted, inject, watch } from "vue";
 import {
   SearchIcon,
   UserIcon,
@@ -352,10 +352,13 @@ const showSuccess = inject("showSuccess");
 
 const orders = ref([]);
 const searchQuery = ref("");
+const statusFilter = ref("");
 const isLoading = ref(false);
 const isAssigning = ref(null);
 const isUpdating = ref(null);
 const isDeleting = ref(null);
+const isSearching = ref(false);
+const binarySearchResult = ref(null);
 
 const showOrderModal = ref(false);
 const editingOrder = ref(null);
@@ -421,10 +424,54 @@ const fetchOrders = async () => {
   }
 };
 
+const performBinarySearch = async (orderId) => {
+  isSearching.value = true;
+  try {
+    const { data, error } = await ordersApi.searchOrderByIdBinary(orderId);
+    if (error) {
+      console.log("Failed to search order: " + error);
+      binarySearchResult.value = null;
+    }
+    binarySearchResult.value = data;
+
+    if (data) {
+      showSuccess(`Order #${orderId} found using binary search!`);
+    } else {
+      showError(`Order #${orderId} not found`);
+    }
+  } catch (err) {
+    showError("Failed to search order");
+    binarySearchResult.value = null;
+  } finally {
+    isSearching.value = false;
+  }
+};
+
 const refreshOrders = async () => {
   await fetchOrders();
   showSuccess("Orders refreshed successfully");
 };
+
+const filteredOrders = computed(() => {
+  // If we have a binary search result, return it
+  if (binarySearchResult.value !== null) {
+    return [binarySearchResult.value];
+  }
+
+  // If searching by numeric ID but no result yet, return empty
+  if (searchQuery.value && /^\d+$/.test(searchQuery.value.trim())) {
+    return [];
+  }
+
+  // For all other cases, show all orders (no client-side filtering)
+  let filtered = orders.value;
+
+  if (statusFilter.value) {
+    filtered = filtered.filter((order) => order.status === statusFilter.value);
+  }
+
+  return filtered;
+});
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -587,5 +634,25 @@ onMounted(() => {
 // Also restart countdowns when orders change
 watch(orders, () => {
   startCountdowns();
+});
+
+// Watch for search query changes to trigger binary search
+watch(searchQuery, (newQuery) => {
+  const trimmedQuery = newQuery.trim();
+
+  // Clear binary search result if search is empty
+  if (!trimmedQuery) {
+    binarySearchResult.value = null;
+    return;
+  }
+
+  // Only perform binary search for numeric IDs
+  if (/^\d+$/.test(trimmedQuery)) {
+    performBinarySearch(trimmedQuery);
+  } else {
+    // For non-numeric searches, clear binary search result
+    // (no client-side filtering - shows all orders)
+    binarySearchResult.value = null;
+  }
 });
 </script>

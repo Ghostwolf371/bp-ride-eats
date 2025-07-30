@@ -81,28 +81,57 @@ public class OrderService {
         return assignments;
     }
 
-    // Sorting by preparation time
-    public List<Order> getOrdersSortedByPreparationTime() {
-        return orders.values().stream()
-                .sorted(Comparator.comparingInt(Order::getPreparationTime))
-                .collect(Collectors.toList());
-    }
-
-    // Search by ID
-    public Order searchOrderById(String id) {
-        return orders.get(id);
-    }
-
-    // Completed orders sorted to bottom
-    public List<Order> getOrdersWithCompletedAtBottom() {
-        return orders.values().stream()
-                .sorted(Comparator.comparing((Order o) -> "COMPLETED".equals(o.getStatus()) ? 1 : 0))
-                .collect(Collectors.toList());
-    }
-
+    // Get orders by statuses with insertion sort by preparation time
     public List<Order> getOrdersByStatuses(List<String> statuses) {
-        return orders.values().stream()
+        List<Order> filteredOrders = orders.values().stream()
             .filter(order -> statuses.contains(order.getStatus()))
             .collect(Collectors.toList());
+
+        // Apply insertion sort by preparation time
+        return insertionSortByPreparationTime(filteredOrders);
+    }
+
+    // Insertion sort algorithm for sorting orders by preparation time
+    private List<Order> insertionSortByPreparationTime(List<Order> orderList) {
+        if (orderList == null || orderList.size() <= 1) {
+            return orderList;
+        }
+
+        for (int i = 1; i < orderList.size(); i++) {
+            Order key = orderList.get(i);
+            int j = i - 1;
+
+            // Move elements that are greater than key's preparation time
+            // to one position ahead of their current position
+            while (j >= 0 && orderList.get(j).getPreparationTime() > key.getPreparationTime()) {
+                orderList.set(j + 1, orderList.get(j));
+                j = j - 1;
+            }
+            orderList.set(j + 1, key);
+        }
+
+        return orderList;
+    }
+
+    // Binary search algorithm to find an order by ID
+    public Order binarySearchOrderById(String id) {
+        List<Order> orderList = new ArrayList<>(orders.values());
+        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+        orderList.sort(Comparator.comparing(Order::getId));
+        int left = 0;
+        int right = orderList.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            Order midOrder = orderList.get(mid);
+            int cmp = midOrder.getId().compareTo(id);
+            if (cmp == 0) {
+                return midOrder;
+            } else if (cmp < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return null;
     }
 }

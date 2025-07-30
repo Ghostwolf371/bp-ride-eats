@@ -41,7 +41,7 @@
 
     <!-- Loading State -->
     <div
-      v-if="isLoading || (!isCountdownsReady && assignableOrders.length > 0)"
+      v-if="isLoading || (!isCountdownsReady && filteredOrders.length > 0)"
       class="flex justify-center py-12"
     >
       <div
@@ -56,16 +56,16 @@
         <div class="p-4 border-b border-gray-700">
           <h3 class="text-lg font-semibold text-white flex items-center">
             <ShoppingBagIcon class="h-5 w-5 mr-2 text-green-400" />
-            Available Orders ({{ assignableOrders.length }})
+            Available Orders ({{ filteredOrders.length }})
           </h3>
         </div>
         <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
-          <div v-if="assignableOrders.length === 0" class="text-center py-8">
+          <div v-if="filteredOrders.length === 0" class="text-center py-8">
             <ShoppingBagIcon class="h-12 w-12 text-gray-600 mx-auto mb-2" />
             <p class="text-gray-400">No available orders</p>
           </div>
           <div
-            v-for="order in assignableOrders"
+            v-for="order in filteredOrders"
             :key="order.id"
             @click="countdowns[order.id] === 0 ? selectOrder(order) : null"
             :class="[
@@ -130,16 +130,16 @@
         <div class="p-4 border-b border-gray-700">
           <h3 class="text-lg font-semibold text-white flex items-center">
             <BikeIcon class="h-5 w-5 mr-2 text-green-400" />
-            Available Bikers ({{ availableBikers.length }})
+            Available Bikers ({{ filteredBikers.length }})
           </h3>
         </div>
         <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
-          <div v-if="availableBikers.length === 0" class="text-center py-8">
+          <div v-if="filteredBikers.length === 0" class="text-center py-8">
             <BikeIcon class="h-12 w-12 text-gray-600 mx-auto mb-2" />
             <p class="text-gray-400">No available bikers</p>
           </div>
           <div
-            v-for="biker in availableBikers"
+            v-for="biker in filteredBikers"
             :key="biker.id"
             @click="selectBiker(biker)"
             :class="[
@@ -369,6 +369,29 @@ const formatSecondsToHMS = (seconds) => {
   return [h, m, s].map((v) => v.toString().padStart(2, "0")).join(":");
 };
 
+// Computed properties
+const filteredOrders = computed(() => {
+  if (!orderSearchQuery.value) return assignableOrders.value;
+
+  const query = orderSearchQuery.value.toLowerCase();
+  return assignableOrders.value.filter(
+    (order) =>
+      order.id?.toLowerCase().includes(query) ||
+      order.customerName?.toLowerCase().includes(query) ||
+      order.restaurant?.toLowerCase().includes(query)
+  );
+});
+
+const filteredBikers = computed(() => {
+  if (!bikerSearchQuery.value) return availableBikers.value;
+
+  const query = bikerSearchQuery.value.toLowerCase();
+  return availableBikers.value.filter(
+    (biker) =>
+      biker.name?.toLowerCase().includes(query) || biker.phone?.includes(query)
+  );
+});
+
 // Methods
 const fetchAssignableOrders = async () => {
   try {
@@ -452,8 +475,9 @@ const confirmAssignment = async () => {
       showSuccess(
         `Order ${selectedOrder.value.id} successfully assigned to ${selectedBiker.value.name}!`
       );
-      await fetchAssignmentHistory();
+
       await fetchAssignableOrders();
+      await fetchAssignmentHistory();
       clearSelection();
     }
   } catch (err) {

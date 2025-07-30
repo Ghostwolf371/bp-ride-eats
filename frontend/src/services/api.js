@@ -78,6 +78,9 @@ export const ordersApi = {
       method: "PUT",
       body: JSON.stringify({ bikerId }),
     }),
+
+  // Search order by ID using backend binary search
+  searchOrderByIdBinary: (orderId) => apiRequest(`/orders/binary/${orderId}`),
 };
 
 // Bikers API
