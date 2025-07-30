@@ -20,7 +20,7 @@ public class BikerService {
 
     public Biker createBiker(Biker biker) {
         if (biker.getId() == null || biker.getId().isEmpty()) {
-            biker.setId(UUID.randomUUID().toString());
+            biker.setId(String.valueOf(bikers.size() + 1));
         }
         bikers.put(biker.getId(), biker);
         return biker;
