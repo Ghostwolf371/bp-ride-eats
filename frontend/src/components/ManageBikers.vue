@@ -67,6 +67,7 @@
             </div>
             <div class="ml-3">
               <h3 class="text-lg font-semibold text-white">{{ biker.name }}</h3>
+              <p class="text-sm text-gray-400">ID: {{ biker.id }}</p>
             </div>
           </div>
         </div>
