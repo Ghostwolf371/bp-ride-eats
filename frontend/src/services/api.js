@@ -77,7 +77,8 @@ export const ordersApi = {
   searchOrderByIdBinary: (orderId) => apiRequest(`/orders/binary/${orderId}`),
 
   // Search assignable order by ID using backend binary search
-  searchAssignableOrderByIdBinary: (orderId) => apiRequest(`/orders/assignable/binary/${orderId}`),
+  searchAssignableOrderByIdBinary: (orderId) =>
+    apiRequest(`/orders/assignable/binary/${orderId}`),
 };
 
 // Bikers API
@@ -85,12 +86,8 @@ export const bikersApi = {
   // Get all bikers
   getAllBikers: () => apiRequest("/bikers"),
 
-  // Get available bikers for assignment
-  getAvailableBikers: () => apiRequest("/bikers/available"),
-
   // Search biker by ID using backend binary search
   searchBikerByIdBinary: (bikerId) => apiRequest(`/bikers/binary/${bikerId}`),
-
 
   // Create new biker
   createBiker: (bikerData) =>

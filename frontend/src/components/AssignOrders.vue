@@ -461,7 +461,7 @@ const fetchAssignableOrders = async () => {
 
 const fetchAvailableBikers = async () => {
   try {
-    const { data, error } = await bikersApi.getAvailableBikers();
+    const { data, error } = await bikersApi.getAllBikers();
     if (error) {
       showError("Failed to fetch available bikers: " + error);
     } else {
