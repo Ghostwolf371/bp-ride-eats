@@ -19,18 +19,8 @@ public class BikerController {
         return bikerService.getAllBikers();
     }
 
-    @GetMapping("/available")
-    public List<Biker> getAvailableBikers() {
-        return bikerService.getAvailableBikers();
-    }
-
-    @GetMapping("/{id}")
-    public Biker getBikerById(@PathVariable String id) {
-        return bikerService.getBikerById(id);
-    }
-    
     @GetMapping("/binary/{id}")
-    public Biker getBikerByIdBinary(@PathVariable String id) {
+    public Biker getBikerByIdBinary(@PathVariable int id) {
         return bikerService.binarySearchBikerById(id);
     }
 
@@ -40,12 +30,12 @@ public class BikerController {
     }
 
     @PutMapping("/{id}")
-    public Biker updateBiker(@PathVariable String id, @RequestBody Biker biker) {
+    public Biker updateBiker(@PathVariable int id, @RequestBody Biker biker) {
         return bikerService.updateBiker(id, biker);
     }
 
     @DeleteMapping("/{id}")
-    public Map<String, Object> deleteBiker(@PathVariable String id) {
+    public Map<String, Object> deleteBiker(@PathVariable int id) {
         bikerService.deleteBiker(id);
         return java.util.Collections.singletonMap("success", true);
     }

@@ -16,12 +16,51 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
-    private final Map<String, Order> orders = new ConcurrentHashMap<>();
+    private final Map<Integer, Order> orders = new ConcurrentHashMap<>();
     private final List<Assignment> assignments = new ArrayList<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public List<Order> getAllOrders() {
-        return new ArrayList<>(orders.values());
+      List<Order> allOrders = new ArrayList<>(orders.values());
+
+      // Insertion Sort Algorithm to put completed orders at the bottom
+      if (allOrders == null || allOrders.size() <= 1) {
+          return allOrders;
+      }
+
+      // Insertion Sort implementation
+      for (int i = 1; i < allOrders.size(); i++) {
+          Order key = allOrders.get(i);
+          int j = i - 1;
+
+          // Move elements that should come before 'key' to one position ahead
+          while (j >= 0 && shouldComeBefore(key, allOrders.get(j))) {
+              allOrders.set(j + 1, allOrders.get(j));
+              j = j - 1;
+          }
+          allOrders.set(j + 1, key);
+      }
+
+      return allOrders;
+  }
+
+      // Helper method to determine if orderA should come before orderB
+      private boolean shouldComeBefore(Order orderA, Order orderB) {
+        // If both are COMPLETED, sort by creation date (newest first)
+        if ("COMPLETED".equals(orderA.getStatus()) && "COMPLETED".equals(orderB.getStatus())) {
+            LocalDateTime dateA = orderA.getCreatedAt() != null ? orderA.getCreatedAt() : LocalDateTime.MIN;
+            LocalDateTime dateB = orderB.getCreatedAt() != null ? orderB.getCreatedAt() : LocalDateTime.MIN;
+            return dateA.isAfter(dateB); // Newest first
+        }
+
+        // If only one is COMPLETED, put COMPLETED at the bottom
+        if ("COMPLETED".equals(orderA.getStatus())) return false; // COMPLETED should come after
+        if ("COMPLETED".equals(orderB.getStatus())) return true;  // COMPLETED should come after
+
+        // For non-completed orders, sort by preparation time (shortest first)
+        int prepTimeA = orderA.getPreparationTime();
+        int prepTimeB = orderB.getPreparationTime();
+        return prepTimeA < prepTimeB;
     }
 
     public List<Order> getOrdersByStatus(String status) {
@@ -30,13 +69,19 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public Order getOrderById(String id) {
-        return orders.get(id);
-    }
-
     public Order createOrder(Order order) {
-        if (order.getId() == null || order.getId().isEmpty()) {
-            order.setId(String.valueOf(orders.size() + 1));
+        if (order.getId() == 0) {
+            // Find the next available ID
+            int nextId;
+            if (orders.isEmpty()) {
+                nextId = 1;
+            } else {
+                nextId = orders.keySet().stream()
+                        .mapToInt(Integer::intValue)
+                        .max()
+                        .orElse(0) + 1;
+            }
+            order.setId(nextId);
         }
         order.setStatus("PREPARING");
         order.setCreatedAt(LocalDateTime.now());
@@ -54,7 +99,7 @@ public class OrderService {
         return order;
     }
 
-    public Order updateOrder(String id, Order updated) {
+    public Order updateOrder(Integer id, Order updated) {
         Order existing = orders.get(id);
         if (existing == null) return null;
         updated.setId(id);
@@ -63,16 +108,16 @@ public class OrderService {
         return updated;
     }
 
-    public void deleteOrder(String id) {
+    public void deleteOrder(Integer id) {
         orders.remove(id);
     }
 
-    public Order assignOrderToBiker(String orderId, Biker biker) {
+    public Order assignOrderToBiker(Integer orderId, Biker biker) {
         Order order = orders.get(orderId);
         if (order == null || !"AVAILABLE".equals(order.getStatus())) return null;
         order.setAssignedBiker(biker.getName());
         order.setStatus("COMPLETED");
-        Assignment assignment = new Assignment(UUID.randomUUID().toString(), orderId, biker.getName(), LocalDateTime.now(), "COMPLETED");
+        Assignment assignment = new Assignment(UUID.randomUUID().toString(), String.valueOf(orderId), biker.getName(), LocalDateTime.now(), "COMPLETED");
         assignments.add(assignment);
         return order;
     }
@@ -114,16 +159,16 @@ public class OrderService {
     }
 
     // Binary search algorithm to find an order by ID
-    public Order binarySearchOrderById(String id) {
+    public Order binarySearchOrderById(Integer id) {
         List<Order> orderList = new ArrayList<>(orders.values());
-        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+        // Sort the list by ID (assuming IDs are Integers, sort numerically)
         orderList.sort(Comparator.comparing(Order::getId));
         int left = 0;
         int right = orderList.size() - 1;
         while (left <= right) {
             int mid = left + (right - left) / 2;
             Order midOrder = orderList.get(mid);
-            int cmp = midOrder.getId().compareTo(id);
+            int cmp = Integer.compare(midOrder.getId(), id);
             if (cmp == 0) {
                 return midOrder;
             } else if (cmp < 0) {
@@ -134,23 +179,23 @@ public class OrderService {
         }
         return null;
     }
-    
-    // Binary search algorithm to find an assignable order by ID
-    public Order binarySearchAssignableOrderById(String id) {
+
+        // Binary search algorithm to find an assignable order by ID
+    public Order binarySearchAssignableOrderById(Integer id) {
         // Get only assignable orders (AVAILABLE or PREPARING)
         List<Order> assignableOrderList = orders.values().stream()
             .filter(order -> "AVAILABLE".equals(order.getStatus()) || "PREPARING".equals(order.getStatus()))
             .collect(Collectors.toList());
-        
-        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+
+        // Sort the list by ID (assuming IDs are Integers, sort numerically)
         assignableOrderList.sort(Comparator.comparing(Order::getId));
-        
+
         int left = 0;
         int right = assignableOrderList.size() - 1;
         while (left <= right) {
             int mid = left + (right - left) / 2;
             Order midOrder = assignableOrderList.get(mid);
-            int cmp = midOrder.getId().compareTo(id);
+            int cmp = Integer.compare(midOrder.getId(), id);
             if (cmp == 0) {
                 return midOrder;
             } else if (cmp < 0) {

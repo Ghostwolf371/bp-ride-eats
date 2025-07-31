@@ -3,7 +3,7 @@ package com.ghost_riders.RideEats.model;
 import java.time.LocalDateTime;
 
 public class Order {
-    private String id;
+    private int id;
     private String customerName;
     private String restaurant;
     private int preparationTime;
@@ -15,7 +15,7 @@ public class Order {
 
     public Order() {}
 
-    public Order(String id, String customerName, String restaurant, int preparationTime, double total, String deliveryAddress, String status, String assignedBiker, LocalDateTime createdAt) {
+    public Order(int id, String customerName, String restaurant, int preparationTime, double total, String deliveryAddress, String status, String assignedBiker, LocalDateTime createdAt) {
         this.id = id;
         this.customerName = customerName;
         this.restaurant = restaurant;
@@ -28,8 +28,8 @@ public class Order {
     }
 
     // Getters and setters for all fields
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
     public String getRestaurant() { return restaurant; }

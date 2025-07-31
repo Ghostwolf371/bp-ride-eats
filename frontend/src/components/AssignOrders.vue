@@ -159,6 +159,7 @@
               </div>
               <div class="flex-1">
                 <h4 class="font-medium text-white">{{ biker.name }}</h4>
+                <p class="text-sm text-gray-400">ID: {{ biker.id }}</p>
               </div>
               <div class="text-right">
                 <div class="flex items-center text-sm text-gray-300">
@@ -377,7 +378,9 @@ const formatSecondsToHMS = (seconds) => {
 const performAssignableOrderBinarySearch = async (orderId) => {
   isSearching.value = true;
   try {
-    const { data, error } = await ordersApi.searchAssignableOrderByIdBinary(orderId);
+    const { data, error } = await ordersApi.searchAssignableOrderByIdBinary(
+      orderId
+    );
     if (error) {
       console.log("Failed to search order: " + error);
       orderBinarySearchResult.value = null;
@@ -423,32 +426,22 @@ const performBikerBinarySearch = async (bikerId) => {
 
 // Computed properties
 const filteredOrders = computed(() => {
-  // If we have a binary search result, return it
-  if (orderBinarySearchResult.value !== null) {
-    return [orderBinarySearchResult.value];
-  }
-
   // If searching by numeric ID but no result yet, return empty
   if (orderSearchQuery.value && /^\d+$/.test(orderSearchQuery.value.trim())) {
-    return [];
+    return orderBinarySearchResult.value ? [orderBinarySearchResult.value] : [];
   }
 
-  // For non-ID searches, return all bikers (no client-side filtering)
+  // For non-ID searches, return all orders (no client-side filtering)
   return assignableOrders.value;
 });
 
 const filteredBikers = computed(() => {
-  // If we have a binary search result, return it
-  if (bikerBinarySearchResult.value !== null) {
-    return [bikerBinarySearchResult.value];
-  }
-
   // If searching by numeric ID but no result yet, return empty
   if (bikerSearchQuery.value && /^\d+$/.test(bikerSearchQuery.value.trim())) {
-    return [];
+    return bikerBinarySearchResult.value ? [bikerBinarySearchResult.value] : [];
   }
 
-  // For non-ID searches, return all bikers (no client-side filtering)
+  // For non-ID searches, return all orders (no client-side filtering)
   return availableBikers.value;
 });
 
@@ -577,7 +570,7 @@ watch(orderSearchQuery, (newQuery) => {
 
   // Clear binary search result if search is empty
   if (!trimmedQuery) {
-    binarySearchResult.value = null;
+    orderBinarySearchResult.value = null;
     return;
   }
 
@@ -587,7 +580,7 @@ watch(orderSearchQuery, (newQuery) => {
     performAssignableOrderBinarySearch(trimmedQuery);
   } else {
     // For non-numeric searches, clear binary search result
-    binarySearchResult.value = null;
+    orderBinarySearchResult.value = null;
   }
 });
 

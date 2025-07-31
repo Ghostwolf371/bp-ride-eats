@@ -428,7 +428,6 @@ const performBinarySearch = async (orderId) => {
   try {
     const { data, error } = await ordersApi.searchOrderByIdBinary(orderId);
     if (error) {
-      console.log("Failed to search order: " + error);
       binarySearchResult.value = null;
     }
     binarySearchResult.value = data;
@@ -452,18 +451,13 @@ const refreshOrders = async () => {
 };
 
 const filteredOrders = computed(() => {
-  // If we have a binary search result, return it
-  if (searchQuery.value !== null) {
-    return [searchQuery.value];
-  }
-
   // If searching by numeric ID but no result yet, return empty
   if (searchQuery.value && /^\d+$/.test(searchQuery.value.trim())) {
-    return [];
+    return binarySearchResult.value ? [binarySearchResult.value] : [];
   }
 
-  // For non-ID searches, return all bikers (no client-side filtering)
-  return bikers.value;
+  // For non-ID searches, return all orders (no client-side filtering)
+  return orders.value;
 });
 
 const getStatusColor = (status) => {
@@ -545,7 +539,7 @@ async function quickAssignOrder(order) {
 
 async function fetchAvailableBikers() {
   try {
-    const { data, error } = await bikersApi.getAvailableBikers();
+    const { data, error } = await bikersApi.getAllBikers();
     if (error) {
       showError("Failed to fetch bikers: " + error);
       availableBikers.value = [];

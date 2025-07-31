@@ -43,18 +43,13 @@ public class OrderController {
         return orderService.getOrdersByStatus("COMPLETED");
     }
 
-    @GetMapping("/{id}")
-    public Order getOrderById(@PathVariable String id) {
-        return orderService.getOrderById(id);
-    }
-
     @GetMapping("/binary/{id}")
-    public Order getOrderByIdBinary(@PathVariable String id) {
+    public Order getOrderByIdBinary(@PathVariable int id) {
         return orderService.binarySearchOrderById(id);
     }
-    
+
     @GetMapping("/assignable/binary/{id}")
-    public Order getAssignableOrderByIdBinary(@PathVariable String id) {
+    public Order getAssignableOrderByIdBinary(@PathVariable int id) {
         return orderService.binarySearchAssignableOrderById(id);
     }
 
@@ -64,24 +59,24 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public Order updateOrder(@PathVariable String id, @RequestBody Order order) {
+    public Order updateOrder(@PathVariable int id, @RequestBody Order order) {
         return orderService.updateOrder(id, order);
     }
 
     @DeleteMapping("/{id}")
-    public Map<String, Object> deleteOrder(@PathVariable String id) {
+    public Map<String, Object> deleteOrder(@PathVariable int id) {
         orderService.deleteOrder(id);
         return java.util.Collections.singletonMap("success", true);
     }
 
     @PutMapping("/{id}/assign")
-    public Order assignOrderToBiker(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public Order assignOrderToBiker(@PathVariable int id, @RequestBody Map<String, String> body) {
         String bikerId = body.get("bikerId");
-        Biker biker = bikerService.getBikerById(bikerId);
+        Biker biker = bikerService.getBikerById(Integer.parseInt(bikerId));
         if (biker == null) return null;
         Order order = orderService.assignOrderToBiker(id, biker);
         if (order != null) {
-            Assignment assignment = new Assignment(null, id, biker.getName(), java.time.LocalDateTime.now(), "COMPLETED");
+            Assignment assignment = new Assignment(null, String.valueOf(id), biker.getName(), java.time.LocalDateTime.now(), "COMPLETED");
             assignmentService.addAssignment(assignment);
         }
         return order;

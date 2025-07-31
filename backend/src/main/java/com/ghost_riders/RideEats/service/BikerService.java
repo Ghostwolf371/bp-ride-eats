@@ -5,29 +5,38 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class BikerService {
-    private final Map<String, Biker> bikers = new ConcurrentHashMap<>();
+    private final Map<Integer, Biker> bikers = new ConcurrentHashMap<>();
 
     public List<Biker> getAllBikers() {
         return new ArrayList<>(bikers.values());
     }
 
-    public Biker getBikerById(String id) {
+    public Biker getBikerById(Integer id) {
         return bikers.get(id);
     }
 
     public Biker createBiker(Biker biker) {
-        if (biker.getId() == null || biker.getId().isEmpty()) {
-            biker.setId(String.valueOf(bikers.size() + 1));
+        if (biker.getId() == 0) {
+            // Find the next available ID
+            int nextId;
+            if (bikers.isEmpty()) {
+                nextId = 1;
+            } else {
+                nextId = bikers.keySet().stream()
+                        .mapToInt(Integer::intValue)
+                        .max()
+                        .orElse(0) + 1;
+            }
+            biker.setId(nextId);
         }
         bikers.put(biker.getId(), biker);
         return biker;
     }
 
-    public Biker updateBiker(String id, Biker updated) {
+    public Biker updateBiker(Integer id, Biker updated) {
         Biker existing = bikers.get(id);
         if (existing == null) return null;
         updated.setId(id);
@@ -35,27 +44,22 @@ public class BikerService {
         return updated;
     }
 
-    public void deleteBiker(String id) {
+    public void deleteBiker(Integer id) {
         bikers.remove(id);
     }
 
-    public List<Biker> getAvailableBikers() {
-        // For demo, all bikers are available
-        return new ArrayList<>(bikers.values());
-    }
-    
     // Binary search algorithm to find a biker by ID
-    public Biker binarySearchBikerById(String id) {
+    public Biker binarySearchBikerById(Integer id) {
         List<Biker> bikerList = new ArrayList<>(bikers.values());
-        // Sort the list by ID (assuming IDs are Strings, sort lexicographically)
+        // Sort the list by ID (assuming IDs are Integers, sort numerically)
         bikerList.sort(Comparator.comparing(Biker::getId));
-        
+
         int left = 0;
         int right = bikerList.size() - 1;
         while (left <= right) {
             int mid = left + (right - left) / 2;
             Biker midBiker = bikerList.get(mid);
-            int cmp = midBiker.getId().compareTo(id);
+            int cmp = Integer.compare(midBiker.getId(), id);
             if (cmp == 0) {
                 return midBiker;
             } else if (cmp < 0) {

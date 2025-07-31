@@ -14,7 +14,10 @@
             class="w-full sm:w-64 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
           <div class="absolute right-3 top-2.5">
-            <RefreshCwIcon v-if="isSearching" class="h-5 w-5 text-green-400 animate-spin" />
+            <RefreshCwIcon
+              v-if="isSearching"
+              class="h-5 w-5 text-green-400 animate-spin"
+            />
             <SearchIcon v-else class="h-5 w-5 text-gray-400" />
           </div>
         </div>
@@ -237,16 +240,10 @@ const bikerForm = ref({
 
 // Computed property for filtered bikers
 const filteredBikers = computed(() => {
-  // If we have a binary search result, return it
-  if (binarySearchResult.value !== null) {
-    return [binarySearchResult.value];
-  }
-
   // If searching by numeric ID but no result yet, return empty
   if (searchQuery.value && /^\d+$/.test(searchQuery.value.trim())) {
-    return [];
+    return binarySearchResult.value ? [binarySearchResult.value] : [];
   }
-
   // For non-ID searches, return all bikers (no client-side filtering)
   return bikers.value;
 });
