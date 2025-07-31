@@ -255,7 +255,6 @@ const performBikerBinarySearch = async (bikerId) => {
   try {
     const { data, error } = await bikersApi.searchBikerByIdBinary(bikerId);
     if (error) {
-      console.log("Failed to search biker: " + error);
       binarySearchResult.value = null;
     }
     binarySearchResult.value = data;
