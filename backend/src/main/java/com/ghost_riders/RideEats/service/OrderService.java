@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,17 +15,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
-    private final Map<Integer, Order> orders = new ConcurrentHashMap<>();
+    private final List<Order> orders = new ArrayList<>();
     private final List<Assignment> assignments = new ArrayList<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public List<Order> getAllOrders() {
-      List<Order> allOrders = new ArrayList<>(orders.values());
+        // Create a copy to avoid concurrent modification
+        List<Order> allOrders = new ArrayList<>(orders);
 
-      // Insertion Sort Algorithm to put completed orders at the bottom
-      if (allOrders == null || allOrders.size() <= 1) {
-          return allOrders;
-      }
+        // Insertion Sort Algorithm to put completed orders at the bottom
+        if (allOrders.size() <= 1) {
+            return allOrders;
+        }
 
       // Insertion Sort implementation
       for (int i = 1; i < allOrders.size(); i++) {
@@ -64,7 +64,7 @@ public class OrderService {
     }
 
     public List<Order> getOrdersByStatus(String status) {
-        return orders.values().stream()
+        return orders.stream()
                 .filter(order -> status.equals(order.getStatus()))
                 .collect(Collectors.toList());
     }
@@ -72,25 +72,24 @@ public class OrderService {
     public Order createOrder(Order order) {
         if (order.getId() == 0) {
             // Find the next available ID
-            int nextId;
-            if (orders.isEmpty()) {
-                nextId = 1;
-            } else {
-                nextId = orders.keySet().stream()
-                        .mapToInt(Integer::intValue)
-                        .max()
-                        .orElse(0) + 1;
-            }
+            int nextId = orders.stream()
+                    .mapToInt(Order::getId)
+                    .max()
+                    .orElse(0) + 1;
             order.setId(nextId);
         }
         order.setStatus("PREPARING");
         order.setCreatedAt(LocalDateTime.now());
-        orders.put(order.getId(), order);
+        orders.add(order);
 
         // Schedule status change
         int prepTime = order.getPreparationTime();
+        int orderId = order.getId();
         scheduler.schedule(() -> {
-            Order o = orders.get(order.getId());
+            Order o = orders.stream()
+                    .filter(order1 -> order1.getId() == orderId)
+                    .findFirst()
+                    .orElse(null);
             if (o != null && "PREPARING".equals(o.getStatus())) {
                 o.setStatus("AVAILABLE");
             }
@@ -99,27 +98,49 @@ public class OrderService {
         return order;
     }
 
+    public Order getOrderById(Integer id) {
+      return orders.stream()
+              .filter(order -> order.getId() == id)
+              .findFirst()
+              .orElse(null);
+    }
+
     public Order updateOrder(Integer id, Order updated) {
-        Order existing = orders.get(id);
+        Order existing = getOrderById(id);
         if (existing == null) return null;
-        updated.setId(id);
-        updated.setCreatedAt(existing.getCreatedAt());
-        orders.put(id, updated);
-        return updated;
+
+        int index = orders.indexOf(existing);
+        if (index != -1) {
+            updated.setId(id);
+            updated.setAssignedBiker(existing.getAssignedBiker());
+            updated.setStatus(existing.getStatus());
+            updated.setCreatedAt(existing.getCreatedAt());
+            orders.set(index, updated);
+            return updated;
+        }
+        return null;
     }
 
     public void deleteOrder(Integer id) {
-        orders.remove(id);
+        orders.removeIf(order -> order.getId() == id);
     }
 
     public Order assignOrderToBiker(Integer orderId, Biker biker) {
-        Order order = orders.get(orderId);
-        if (order == null || !"AVAILABLE".equals(order.getStatus())) return null;
-        order.setAssignedBiker(biker.getName());
-        order.setStatus("COMPLETED");
-        Assignment assignment = new Assignment(UUID.randomUUID().toString(), String.valueOf(orderId), biker.getName(), LocalDateTime.now(), "COMPLETED");
-        assignments.add(assignment);
-        return order;
+        return orders.stream()
+                .filter(order -> order.getId() == orderId && "AVAILABLE".equals(order.getStatus()))
+                .findFirst()
+                .map(order -> {
+                    order.setAssignedBiker(biker.getName());
+                    order.setStatus("COMPLETED");
+                    Assignment assignment = new Assignment(UUID.randomUUID().toString(),
+                            String.valueOf(orderId),
+                            biker.getName(),
+                            LocalDateTime.now(),
+                            "COMPLETED");
+                    assignments.add(assignment);
+                    return order;
+                })
+                .orElse(null);
     }
 
     public List<Assignment> getAssignmentHistory() {
@@ -128,7 +149,7 @@ public class OrderService {
 
     // Get orders by statuses with insertion sort by preparation time
     public List<Order> getOrdersByStatuses(List<String> statuses) {
-        List<Order> filteredOrders = orders.values().stream()
+        List<Order> filteredOrders = orders.stream()
             .filter(order -> statuses.contains(order.getStatus()))
             .collect(Collectors.toList());
 
@@ -160,9 +181,10 @@ public class OrderService {
 
     // Binary search algorithm to find an order by ID
     public Order binarySearchOrderById(Integer id) {
-        List<Order> orderList = new ArrayList<>(orders.values());
-        // Sort the list by ID (assuming IDs are Integers, sort numerically)
+        // Create a copy and sort it
+        List<Order> orderList = new ArrayList<>(orders);
         orderList.sort(Comparator.comparing(Order::getId));
+
         int left = 0;
         int right = orderList.size() - 1;
         while (left <= right) {
@@ -183,7 +205,7 @@ public class OrderService {
         // Binary search algorithm to find an assignable order by ID
     public Order binarySearchAssignableOrderById(Integer id) {
         // Get only assignable orders (AVAILABLE or PREPARING)
-        List<Order> assignableOrderList = orders.values().stream()
+        List<Order> assignableOrderList = orders.stream()
             .filter(order -> "AVAILABLE".equals(order.getStatus()) || "PREPARING".equals(order.getStatus()))
             .collect(Collectors.toList());
 

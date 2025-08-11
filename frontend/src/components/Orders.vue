@@ -433,7 +433,7 @@ const performBinarySearch = async (orderId) => {
     binarySearchResult.value = data;
 
     if (data) {
-      showSuccess(`Order #${orderId} found using binary search!`);
+      showSuccess(`Order #${orderId} found`);
     } else {
       showError(`Order #${orderId} not found`);
     }

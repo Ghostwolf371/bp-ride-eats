@@ -4,61 +4,63 @@ import com.ghost_riders.RideEats.model.Biker;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class BikerService {
-    private final Map<Integer, Biker> bikers = new ConcurrentHashMap<>();
+    private final List<Biker> bikers = new ArrayList<>();
 
     public List<Biker> getAllBikers() {
-        return new ArrayList<>(bikers.values());
+        return new ArrayList<>(bikers);
     }
 
     public Biker getBikerById(Integer id) {
-        return bikers.get(id);
+        return bikers.stream()
+                .filter(b -> b.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public Biker createBiker(Biker biker) {
         if (biker.getId() == 0) {
             // Find the next available ID
-            int nextId;
-            if (bikers.isEmpty()) {
-                nextId = 1;
-            } else {
-                nextId = bikers.keySet().stream()
-                        .mapToInt(Integer::intValue)
-                        .max()
-                        .orElse(0) + 1;
-            }
+            int nextId = bikers.stream()
+                    .mapToInt(Biker::getId)
+                    .max()
+                    .orElse(0) + 1;
             biker.setId(nextId);
         }
-        bikers.put(biker.getId(), biker);
+        bikers.add(biker);
         return biker;
     }
 
     public Biker updateBiker(Integer id, Biker updated) {
-        Biker existing = bikers.get(id);
+        Biker existing = getBikerById(id);
         if (existing == null) return null;
-        updated.setId(id);
-        bikers.put(id, updated);
-        return updated;
+
+        int index = bikers.indexOf(existing);
+        if (index != -1) {
+            updated.setId(id);
+            bikers.set(index, updated);
+            return updated;
+        }
+        return null;
     }
 
     public void deleteBiker(Integer id) {
-        bikers.remove(id);
+        bikers.removeIf(b -> b.getId() == id);
     }
 
     // Binary search algorithm to find a biker by ID
     public Biker binarySearchBikerById(Integer id) {
-        List<Biker> bikerList = new ArrayList<>(bikers.values());
-        // Sort the list by ID (assuming IDs are Integers, sort numerically)
-        bikerList.sort(Comparator.comparing(Biker::getId));
+        // Create a copy and sort it
+        List<Biker> sortedBikers = new ArrayList<>(bikers);
+        sortedBikers.sort(Comparator.comparing(Biker::getId));
 
         int left = 0;
-        int right = bikerList.size() - 1;
+        int right = sortedBikers.size() - 1;
         while (left <= right) {
             int mid = left + (right - left) / 2;
-            Biker midBiker = bikerList.get(mid);
+            Biker midBiker = sortedBikers.get(mid);
             int cmp = Integer.compare(midBiker.getId(), id);
             if (cmp == 0) {
                 return midBiker;

@@ -260,7 +260,7 @@ const performBikerBinarySearch = async (bikerId) => {
     binarySearchResult.value = data;
 
     if (data) {
-      showSuccess(`Biker #${bikerId} found using binary search!`);
+      showSuccess(`Biker #${bikerId} found`);
     } else {
       showError(`Biker #${bikerId} not found`);
     }
