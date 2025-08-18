@@ -2,11 +2,10 @@ package com.ghost_riders.RideEats.controller;
 
 import com.ghost_riders.RideEats.model.Order;
 import com.ghost_riders.RideEats.model.Biker;
-import com.ghost_riders.RideEats.model.Assignment;
 import com.ghost_riders.RideEats.service.OrderService;
 import com.ghost_riders.RideEats.service.BikerService;
-import com.ghost_riders.RideEats.service.AssignmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +19,6 @@ public class OrderController {
     private OrderService orderService;
     @Autowired
     private BikerService bikerService;
-    @Autowired
-    private AssignmentService assignmentService;
 
     @GetMapping
     public List<Order> getAllOrders() {
@@ -70,15 +67,26 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/assign")
-    public Order assignOrderToBiker(@PathVariable int id, @RequestBody Map<String, String> body) {
+public ResponseEntity<Order> assignOrderToBiker(@PathVariable("id") int id, @RequestBody Map<String, String> body) {
+    try {
         String bikerId = body.get("bikerId");
-        Biker biker = bikerService.getBikerById(Integer.parseInt(bikerId));
-        if (biker == null) return null;
-        Order order = orderService.assignOrderToBiker(id, biker);
-        if (order != null) {
-            Assignment assignment = new Assignment(null, String.valueOf(id), biker.getName(), java.time.LocalDateTime.now(), "COMPLETED");
-            assignmentService.addAssignment(assignment);
+        if (bikerId == null) {
+            return ResponseEntity.badRequest().build();
         }
-        return order;
+
+        Biker biker = bikerService.getBikerById(Integer.parseInt(bikerId));
+        if (biker == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Order order = orderService.assignOrderToBiker(id, biker);
+        if (order == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(order);
+    } catch (NumberFormatException e) {
+        return ResponseEntity.badRequest().build();
     }
+}
 }

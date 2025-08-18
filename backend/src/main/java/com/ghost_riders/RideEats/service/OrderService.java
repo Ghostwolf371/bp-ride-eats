@@ -125,23 +125,32 @@ public class OrderService {
         orders.removeIf(order -> order.getId() == id);
     }
 
+
     public Order assignOrderToBiker(Integer orderId, Biker biker) {
-        return orders.stream()
-                .filter(order -> order.getId() == orderId && "AVAILABLE".equals(order.getStatus()))
-                .findFirst()
-                .map(order -> {
-                    order.setAssignedBiker(biker.getName());
-                    order.setStatus("COMPLETED");
-                    Assignment assignment = new Assignment(UUID.randomUUID().toString(),
-                            String.valueOf(orderId),
-                            biker.getName(),
-                            LocalDateTime.now(),
-                            "COMPLETED");
-                    assignments.add(assignment);
-                    return order;
-                })
-                .orElse(null);
-    }
+      return orders.stream()
+              .filter(order -> order.getId() == orderId)  // Changed to use == for int comparison
+              .findFirst()
+              .map(order -> {
+                  if (!"AVAILABLE".equals(order.getStatus())) {
+                      throw new IllegalStateException("Order is not available for assignment");
+                  }
+
+                  order.setAssignedBiker(biker.getName());
+                  order.setStatus("ASSIGNED");
+
+                  Assignment assignment = new Assignment(
+                      UUID.randomUUID().toString(),
+                      String.valueOf(orderId),
+                      biker.getName(),
+                      LocalDateTime.now(),
+                      "COMPLETED"
+                  );
+                  assignments.add(assignment);
+
+                  return order;
+              })
+              .orElse(null);
+  }
 
     public List<Assignment> getAssignmentHistory() {
         return assignments;

@@ -1,7 +1,8 @@
 package com.ghost_riders.RideEats.controller;
 
 import com.ghost_riders.RideEats.model.Assignment;
-import com.ghost_riders.RideEats.service.AssignmentService;
+import com.ghost_riders.RideEats.service.OrderService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +12,10 @@ import java.util.List;
 @RequestMapping("/api/assignments")
 public class AssignmentController {
     @Autowired
-    private AssignmentService assignmentService;
+    private OrderService orderService;
 
     @GetMapping
     public List<Assignment> getAssignmentHistory() {
-        return assignmentService.getAssignmentHistory();
+        return orderService.getAssignmentHistory();
     }
 }
