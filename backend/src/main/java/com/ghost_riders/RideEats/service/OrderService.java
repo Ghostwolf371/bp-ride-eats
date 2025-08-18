@@ -128,7 +128,7 @@ public class OrderService {
 
     public Order assignOrderToBiker(Integer orderId, Biker biker) {
       return orders.stream()
-              .filter(order -> order.getId() == orderId)  // Changed to use == for int comparison
+              .filter(order -> order.getId() == orderId)
               .findFirst()
               .map(order -> {
                   if (!"AVAILABLE".equals(order.getStatus())) {
