@@ -136,7 +136,7 @@ public class OrderService {
                   }
 
                   order.setAssignedBiker(biker.getName());
-                  order.setStatus("ASSIGNED");
+                  order.setStatus("COMPLETED");
 
                   Assignment assignment = new Assignment(
                       UUID.randomUUID().toString(),
